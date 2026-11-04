@@ -9,27 +9,41 @@ import {
   useVideoConfig,
 } from "remotion";
 import type { AdVideoCompositionProps } from "../types";
-import { DynamicCamera } from "./DynamicCamera";
 import { KineticTypography } from "./KineticTypography";
 
 export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
   cardAnalysis,
-  backgroundImageUrl,
   audioUrl,
 }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
 
-  const primaryColor = cardAnalysis.palette.primary || "#8B263E";
-  const accentColor = cardAnalysis.palette.secondary || "#E85D04";
-  const brandName = cardAnalysis.brandName || "Favorita Modas";
+  const primaryColor = cardAnalysis.palette.primary || "#FF5A1F";
+  const secondaryColor = cardAnalysis.palette.secondary || "#111111";
+  const accentColor = cardAnalysis.palette.accent || "#FF8A50";
+  const bgColor = cardAnalysis.palette.background || "#0D0D12";
+  const brandName = cardAnalysis.brandName || "Sua Marca";
 
   // Duração de cada cena: 112 frames (~3.75s)
   const SCENE_FRAMES = 112;
   const currentSceneIndex = Math.min(3, Math.floor(frame / SCENE_FRAMES));
+  const sceneFrame = frame % SCENE_FRAMES;
 
   // =========================================================================
-  // 1. STORY PROGRESS BARS (4 Segmentos no Topo - Padrão Reels / TikTok)
+  // 1. FUNDO CRIADO DO ZERO (Zero imagem original, puro Motion Graphics)
+  // =========================================================================
+  // Esferas de luz e gradientes que se movem de acordo com a paleta da marca
+  const orb1X = interpolate(frame, [0, 450], [20, 80], { extrapolateRight: "clamp" });
+  const orb1Y = interpolate(frame, [0, 450], [15, 45], { extrapolateRight: "clamp" });
+  const orb2X = interpolate(frame, [0, 450], [80, 25], { extrapolateRight: "clamp" });
+  const orb2Y = interpolate(frame, [0, 450], [75, 60], { extrapolateRight: "clamp" });
+
+  // Transição rápida de luz entre as cenas
+  const isTransition = sceneFrame < 4 && frame > 4;
+  const flashOpacity = isTransition ? interpolate(sceneFrame, [0, 3], [0.4, 0]) : 0;
+
+  // =========================================================================
+  // 2. STORY PROGRESS BARS NO TOPO
   // =========================================================================
   const renderProgressBars = () => {
     return (
@@ -37,11 +51,11 @@ export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
         style={{
           position: "absolute",
           top: height * 0.035,
-          left: "5%",
-          width: "90%",
+          left: "6%",
+          width: "88%",
           display: "flex",
           gap: 6,
-          zIndex: 40,
+          zIndex: 50,
         }}
       >
         {[0, 1, 2, 3].map((sceneIdx) => {
@@ -58,10 +72,10 @@ export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
               style={{
                 flex: 1,
                 height: 4,
-                backgroundColor: "rgba(255, 255, 255, 0.28)",
+                backgroundColor: "rgba(255, 255, 255, 0.25)",
                 borderRadius: 999,
                 overflow: "hidden",
-                backdropFilter: "blur(4px)",
+                backdropFilter: "blur(6px)",
               }}
             >
               <div
@@ -69,7 +83,7 @@ export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
                   height: "100%",
                   width: `${fillPct}%`,
                   backgroundColor: "#FFFFFF",
-                  boxShadow: "0 0 8px rgba(255,255,255,0.8)",
+                  boxShadow: "0 0 10px rgba(255,255,255,0.9)",
                   borderRadius: 999,
                 }}
               />
@@ -80,30 +94,63 @@ export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
     );
   };
 
-  // =========================================================================
-  // 2. HEADER ELEGANTE DA MARCA
-  // =========================================================================
-  const brandHeaderSpring = spring({ frame, fps, config: { damping: 14 } });
+  // Header da marca
+  const headerSpring = spring({ frame, fps, config: { damping: 14 } });
 
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: "#050505",
+        backgroundColor: "#0B0C10",
         overflow: "hidden",
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       }}
     >
-      {/* CÂMERA DINÂMICA COM CORTES E PARALLAX POR CENA */}
-      <DynamicCamera imageUrl={backgroundImageUrl} />
+      {/* ========================================================================= */}
+      {/* CENÁRIO GRÁFICO DINÂMICO GERADO DO ZERO (Canvas Limpo com Orbs e Grid)     */}
+      {/* ========================================================================= */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: `radial-gradient(circle at ${orb1X}% ${orb1Y}%, ${primaryColor}44 0%, transparent 55%), radial-gradient(circle at ${orb2X}% ${orb2Y}%, ${accentColor}33 0%, transparent 60%), #0A0A0F`,
+        }}
+      />
 
-      {/* ÁUDIO: Narração Neural Edge-TTS + Trilha Sonora Sutil Ducked */}
+      {/* Grid de perspectiva sutil no rodapé */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          width: "100%",
+          height: "45%",
+          background: "linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%)",
+          zIndex: 2,
+        }}
+      />
+
+      {/* Flash de corte de cena */}
+      {flashOpacity > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: "#FFFFFF",
+            opacity: flashOpacity,
+            zIndex: 60,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
+      {/* ÁUDIO: Narração Neural + Trilha Ambiente */}
       {audioUrl && <Audio src={audioUrl} volume={1.0} />}
-      <Audio src="/audio/ambient-beat.mp3" volume={audioUrl ? 0.08 : 0.25} />
+      <Audio src="/audio/ambient-beat.mp3" volume={audioUrl ? 0.10 : 0.30} />
 
-      {/* PROGRESS BARS */}
+      {/* BARRAS DE STORIES NO TOPO */}
       {renderProgressBars()}
 
-      {/* HEADER FIXO DA MARCA COM BADGE PREMIUM */}
+      {/* HEADER DA MARCA COM BADGE */}
       <div
         style={{
           position: "absolute",
@@ -113,9 +160,9 @@ export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          zIndex: 35,
-          transform: `translateY(${(1 - brandHeaderSpring) * -30}px)`,
-          opacity: brandHeaderSpring,
+          zIndex: 45,
+          transform: `translateY(${(1 - headerSpring) * -30}px)`,
+          opacity: headerSpring,
         }}
       >
         <div
@@ -123,20 +170,20 @@ export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
             display: "flex",
             alignItems: "center",
             gap: 10,
-            backgroundColor: "rgba(10, 10, 10, 0.75)",
-            backdropFilter: "blur(18px)",
-            border: `1.5px solid ${accentColor}88`,
-            padding: "8px 22px",
+            backgroundColor: "rgba(18, 18, 24, 0.85)",
+            backdropFilter: "blur(20px)",
+            border: `1.5px solid ${primaryColor}77`,
+            padding: "8px 24px",
             borderRadius: 999,
-            boxShadow: `0 8px 24px rgba(0,0,0,0.6), 0 0 15px ${accentColor}33`,
+            boxShadow: `0 8px 30px rgba(0,0,0,0.7), 0 0 20px ${primaryColor}33`,
           }}
         >
-          <span style={{ fontSize: 16 }}>✨</span>
+          <span style={{ fontSize: 16 }}>🚀</span>
           <span
             style={{
               color: "#FFFFFF",
               fontSize: 20,
-              fontWeight: 800,
+              fontWeight: 900,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
             }}
@@ -160,15 +207,300 @@ export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* CENA 1: O GANCHO DE ATENÇÃO (Frames 0 a 112 / 0s a 3.75s)                 */}
+      {/* CENA 1: O GANCHO DE ATENÇÃO (0s a 3.75s / Frames 0 a 112)                 */}
       {/* ========================================================================= */}
       <Sequence from={0} durationInFrames={SCENE_FRAMES}>
         {(() => {
-          const sceneFrame = frame;
-          const badgeSpring = spring({
-            frame: sceneFrame,
+          const sFrame = frame;
+          const springEntrance = spring({
+            frame: sFrame,
             fps,
-            config: { damping: 12, mass: 0.6 },
+            config: { damping: 12, mass: 0.6, stiffness: 140 },
+          });
+
+          return (
+            <AbsoluteFill
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "0 44px",
+                zIndex: 30,
+              }}
+            >
+              {/* Badge de Alerta Inicial */}
+              <div
+                style={{
+                  transform: `scale(${springEntrance}) translateY(${(1 - springEntrance) * 30}px)`,
+                  opacity: springEntrance,
+                  marginBottom: 28,
+                }}
+              >
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 10,
+                    background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
+                    color: "#FFFFFF",
+                    padding: "10px 24px",
+                    borderRadius: 999,
+                    fontSize: 18,
+                    fontWeight: 900,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    boxShadow: `0 8px 25px ${primaryColor}88`,
+                    border: "1px solid rgba(255,255,255,0.4)",
+                  }}
+                >
+                  <span>⚡</span>
+                  <span>Aviso Importante</span>
+                </div>
+              </div>
+
+              {/* Título de Gancho em Tipografia Cinética */}
+              <KineticTypography
+                text={cardAnalysis.hook || "SUA PROMOÇÃO PRONTA ANTES DE ABRIR A LOJA!"}
+                fontSize={56}
+                delayFrames={4}
+                accentColor={accentColor}
+                highlightWords={["loja", "pronta", "promoção", "almoço", "dia", "abrir", "looks"]}
+              />
+
+              {/* Linha decorativa animada */}
+              <div
+                style={{
+                  marginTop: 36,
+                  width: `${springEntrance * 80}%`,
+                  height: 3,
+                  background: `linear-gradient(90deg, transparent, ${primaryColor}, transparent)`,
+                }}
+              />
+            </AbsoluteFill>
+          );
+        })()}
+      </Sequence>
+
+      {/* ========================================================================= */}
+      {/* CENA 2: A SOLUÇÃO / PRODUTO / BENEFÍCIO (3.75s a 7.5s / Frames 112 a 224) */}
+      {/* ========================================================================= */}
+      <Sequence from={SCENE_FRAMES} durationInFrames={SCENE_FRAMES}>
+        {(() => {
+          const sFrame = frame - SCENE_FRAMES;
+          const cardSpring = spring({
+            frame: sFrame,
+            fps,
+            config: { damping: 13, mass: 0.7, stiffness: 130 },
+          });
+
+          const sceneData = cardAnalysis.scenes[1] || {
+            textOverlay: "CARDÁPIO E OFERTAS DO DIA ATUALIZADOS",
+            subtext: "Receba pedidos direto no seu WhatsApp sem complicações",
+          };
+
+          return (
+            <AbsoluteFill
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "0 40px",
+                zIndex: 30,
+              }}
+            >
+              {/* Card de Apresentação da Solução / Mockup de Interface */}
+              <div
+                style={{
+                  width: "100%",
+                  backgroundColor: "rgba(20, 20, 28, 0.88)",
+                  backdropFilter: "blur(24px)",
+                  border: `2px solid ${primaryColor}77`,
+                  borderRadius: 32,
+                  padding: "40px 32px",
+                  boxShadow: `0 30px 80px rgba(0,0,0,0.8), 0 0 30px ${primaryColor}22`,
+                  transform: `scale(${cardSpring}) translateY(${(1 - cardSpring) * 50}px)`,
+                  opacity: cardSpring,
+                  textAlign: "center",
+                }}
+              >
+                {/* Ícone de Destaque */}
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 72,
+                    height: 72,
+                    borderRadius: 24,
+                    background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
+                    fontSize: 36,
+                    marginBottom: 20,
+                    boxShadow: `0 10px 30px ${primaryColor}77`,
+                  }}
+                >
+                  ✨
+                </div>
+
+                {/* Texto Principal da Solução */}
+                <KineticTypography
+                  text={sceneData.textOverlay}
+                  fontSize={44}
+                  delayFrames={0}
+                  accentColor={accentColor}
+                  highlightWords={["rápido", "mesma", "cardápio", "ofertas", "atualizados", "dia"]}
+                />
+
+                {/* Subtexto descritivo */}
+                {sceneData.subtext && (
+                  <p
+                    style={{
+                      marginTop: 20,
+                      color: "#D0D0D8",
+                      fontSize: 22,
+                      fontWeight: 600,
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    {sceneData.subtext}
+                  </p>
+                )}
+              </div>
+            </AbsoluteFill>
+          );
+        })()}
+      </Sequence>
+
+      {/* ========================================================================= */}
+      {/* CENA 3: A OFERTA / CONDIÇÃO / PREÇO (7.5s a 11.25s / Frames 224 a 336)   */}
+      {/* ========================================================================= */}
+      <Sequence from={SCENE_FRAMES * 2} durationInFrames={SCENE_FRAMES}>
+        {(() => {
+          const sFrame = frame - SCENE_FRAMES * 2;
+          const popSpring = spring({
+            frame: sFrame,
+            fps,
+            config: { damping: 11, mass: 0.5, stiffness: 160 },
+          });
+
+          const pulse = 1 + Math.sin(sFrame * 0.3) * 0.03;
+
+          const sceneData = cardAnalysis.scenes[2] || {
+            textOverlay: "PEÇA PELO WHATSAPP COM CONDIÇÕES ESPECIAIS",
+            subtext: "Atendimento direto e prático para o seu pedido",
+          };
+
+          return (
+            <AbsoluteFill
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "0 40px",
+                zIndex: 30,
+              }}
+            >
+              {/* Badge de Oferta Especial */}
+              <div
+                style={{
+                  transform: `scale(${popSpring * pulse}) rotate(-2deg)`,
+                  marginBottom: 24,
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: accentColor,
+                    color: "#0A0A0F",
+                    fontWeight: 900,
+                    fontSize: 22,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    padding: "10px 28px",
+                    borderRadius: 16,
+                    boxShadow: `0 10px 35px ${accentColor}88`,
+                    border: "2px solid #FFFFFF",
+                  }}
+                >
+                  🔥 CONDIÇÃO EXCLUSIVA
+                </div>
+              </div>
+
+              {/* Título da Oferta */}
+              <KineticTypography
+                text={sceneData.textOverlay}
+                fontSize={50}
+                delayFrames={2}
+                accentColor={accentColor}
+                highlightWords={["whatsapp", "condições", "especiais", "pix", "dinheiro", "atacado"]}
+              />
+
+              {/* Selos de Benefício / Pagamento */}
+              <div
+                style={{
+                  marginTop: 30,
+                  display: "flex",
+                  gap: 14,
+                  width: "100%",
+                }}
+              >
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                    backgroundColor: "rgba(22, 22, 30, 0.9)",
+                    border: `1.5px solid ${accentColor}`,
+                    padding: "16px",
+                    borderRadius: 22,
+                    color: "#FFFFFF",
+                    fontSize: 22,
+                    fontWeight: 800,
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
+                  }}
+                >
+                  <span style={{ fontSize: 26 }}>📲</span>
+                  <span>WHATSAPP</span>
+                </div>
+
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                    backgroundColor: "rgba(22, 22, 30, 0.9)",
+                    border: `1.5px solid ${primaryColor}`,
+                    padding: "16px",
+                    borderRadius: 22,
+                    color: "#FFFFFF",
+                    fontSize: 22,
+                    fontWeight: 800,
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
+                  }}
+                >
+                  <span style={{ fontSize: 26 }}>⚡</span>
+                  <span>PEDIDO RÁPIDO</span>
+                </div>
+              </div>
+            </AbsoluteFill>
+          );
+        })()}
+      </Sequence>
+
+      {/* ========================================================================= */}
+      {/* CENA 4: CHAMADA PARA AÇÃO (CTA) (11.25s a 15s / Frames 336 a 450)        */}
+      {/* ========================================================================= */}
+      <Sequence from={SCENE_FRAMES * 3} durationInFrames={SCENE_FRAMES}>
+        {(() => {
+          const sFrame = frame - SCENE_FRAMES * 3;
+          const ctaSpring = spring({
+            frame: sFrame,
+            fps,
+            config: { damping: 13, mass: 0.7, stiffness: 140 },
+          });
+
+          const btnPulse = 1 + Math.sin(sFrame * 0.35) * 0.04;
+          const sheenX = interpolate(sFrame, [0, 80], [-100, 200], {
+            extrapolateRight: "clamp",
           });
 
           return (
@@ -180,331 +512,45 @@ export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
                 zIndex: 30,
               }}
             >
-              {/* Badge de Impacto Inicial */}
-              <div
-                style={{
-                  transform: `scale(${badgeSpring}) translateY(${(1 - badgeSpring) * 20}px)`,
-                  opacity: badgeSpring,
-                  marginBottom: 24,
-                }}
-              >
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    backgroundColor: primaryColor,
-                    color: "#FFFFFF",
-                    padding: "8px 20px",
-                    borderRadius: 999,
-                    fontSize: 18,
-                    fontWeight: 900,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    boxShadow: `0 6px 20px ${primaryColor}99`,
-                    border: "1px solid rgba(255,255,255,0.3)",
-                  }}
-                >
-                  <span>🔥</span>
-                  <span>Aviso Importante</span>
-                </div>
-              </div>
-
-              {/* Tipografia Cinética com revelação escalonada de palavras */}
-              <KineticTypography
-                text={cardAnalysis.hook || "QUER SEUS LOOKS NOVOS AINDA ESTA SEMANA?"}
-                fontSize={56}
-                delayFrames={6}
-                accentColor={accentColor}
-                highlightWords={["looks", "semana", "atacado", "preço", "menor"]}
-              />
-            </AbsoluteFill>
-          );
-        })()}
-      </Sequence>
-
-      {/* ========================================================================= */}
-      {/* CENA 2: O BENEFÍCIO / ENVIO RÁPIDO (Frames 112 a 224 / 3.75s a 7.5s)     */}
-      {/* ========================================================================= */}
-      <Sequence from={SCENE_FRAMES} durationInFrames={SCENE_FRAMES}>
-        {(() => {
-          const sceneFrame = frame - SCENE_FRAMES;
-          const cardSlide = spring({
-            frame: sceneFrame,
-            fps,
-            config: { damping: 14, mass: 0.7, stiffness: 130 },
-          });
-
-          const sceneData = cardAnalysis.scenes[1] || {
-            textOverlay: "PEÇAS SOB ENCOMENDA COM ENVIO RÁPIDO",
-            subtext: "Seus looks chegam na mesma semana do pedido",
-          };
-
-          return (
-            <AbsoluteFill
-              style={{
-                justifyContent: "flex-end",
-                alignItems: "center",
-                padding: "0 36px 140px 36px",
-                zIndex: 30,
-              }}
-            >
-              {/* Card Flutuante de Benefício com Design Editorial */}
-              <div
-                style={{
-                  width: "100%",
-                  transform: `translateY(${(1 - cardSlide) * 60}px)`,
-                  opacity: cardSlide,
-                }}
-              >
-                {/* Tag de Categoria */}
-                <div style={{ marginBottom: 16 }}>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      backgroundColor: "rgba(0, 0, 0, 0.75)",
-                      backdropFilter: "blur(12px)",
-                      color: accentColor,
-                      border: `1px solid ${accentColor}66`,
-                      padding: "6px 16px",
-                      borderRadius: 12,
-                      fontSize: 16,
-                      fontWeight: 800,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    📦 Envio Ágil & Direto
-                  </span>
-                </div>
-
-                {/* Texto Principal Cinético */}
-                <KineticTypography
-                  text={sceneData.textOverlay}
-                  fontSize={44}
-                  align="left"
-                  delayFrames={0}
-                  accentColor={accentColor}
-                  highlightWords={["rápido", "mesma", "semana", "encomenda", "2 a 5"]}
-                />
-
-                {/* Subtexto com Ícone */}
-                {sceneData.subtext && (
-                  <div
-                    style={{
-                      marginTop: 18,
-                      backgroundColor: "rgba(15, 15, 15, 0.8)",
-                      backdropFilter: "blur(16px)",
-                      padding: "14px 20px",
-                      borderRadius: 18,
-                      borderLeft: `4px solid ${accentColor}`,
-                      color: "#E0E0E0",
-                      fontSize: 22,
-                      fontWeight: 600,
-                      lineHeight: 1.3,
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-                    }}
-                  >
-                    {sceneData.subtext}
-                  </div>
-                )}
-              </div>
-            </AbsoluteFill>
-          );
-        })()}
-      </Sequence>
-
-      {/* ========================================================================= */}
-      {/* CENA 3: A OFERTA / CONDIÇÃO DE ATACADO (Frames 224 a 336 / 7.5s a 11.25s) */}
-      {/* ========================================================================= */}
-      <Sequence from={SCENE_FRAMES * 2} durationInFrames={SCENE_FRAMES}>
-        {(() => {
-          const sceneFrame = frame - SCENE_FRAMES * 2;
-          const popSpring = spring({
-            frame: sceneFrame,
-            fps,
-            config: { damping: 11, mass: 0.5, stiffness: 160 },
-          });
-
-          const pulseScale = 1 + Math.sin((sceneFrame / 8) * Math.PI) * 0.03;
-
-          const sceneData = cardAnalysis.scenes[2] || {
-            textOverlay: "PREÇO DE ATACADO EXCLUSIVO",
-            subtext: "Válido para pagamentos no Pix e dinheiro físico",
-          };
-
-          return (
-            <AbsoluteFill
-              style={{
-                justifyContent: "center",
-                alignItems: "center",
-                padding: "0 36px",
-                zIndex: 30,
-              }}
-            >
-              {/* Badge Rotacionada de Oferta Explosiva */}
-              <div
-                style={{
-                  transform: `scale(${popSpring * pulseScale}) rotate(-2deg)`,
-                  marginBottom: 20,
-                }}
-              >
-                <div
-                  style={{
-                    backgroundColor: accentColor,
-                    color: "#000000",
-                    fontWeight: 900,
-                    fontSize: 20,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    padding: "8px 24px",
-                    borderRadius: 14,
-                    boxShadow: `0 8px 30px ${accentColor}88`,
-                    border: "2px solid #FFFFFF",
-                  }}
-                >
-                  ⚡ CONDIÇÃO ESPECIAL
-                </div>
-              </div>
-
-              {/* Título de Destaque da Oferta */}
-              <KineticTypography
-                text={sceneData.textOverlay}
-                fontSize={52}
-                delayFrames={2}
-                accentColor={accentColor}
-                highlightWords={["atacado", "exclusivo", "pix", "dinheiro", "promoção"]}
-              />
-
-              {/* Selo dos Meios de Pagamento */}
-              <div
-                style={{
-                  marginTop: 26,
-                  display: "flex",
-                  gap: 12,
-                  justifyContent: "center",
-                  width: "100%",
-                }}
-              >
-                <div
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    backgroundColor: "rgba(0, 0, 0, 0.82)",
-                    backdropFilter: "blur(14px)",
-                    border: `1.5px solid ${accentColor}`,
-                    padding: "14px 18px",
-                    borderRadius: 20,
-                    color: "#FFFFFF",
-                    fontSize: 22,
-                    fontWeight: 800,
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
-                  }}
-                >
-                  <span style={{ fontSize: 24 }}>💎</span>
-                  <span>PIX</span>
-                </div>
-
-                <div
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    backgroundColor: "rgba(0, 0, 0, 0.82)",
-                    backdropFilter: "blur(14px)",
-                    border: `1.5px solid ${accentColor}`,
-                    padding: "14px 18px",
-                    borderRadius: 20,
-                    color: "#FFFFFF",
-                    fontSize: 22,
-                    fontWeight: 800,
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
-                  }}
-                >
-                  <span style={{ fontSize: 24 }}>💵</span>
-                  <span>DINHEIRO</span>
-                </div>
-              </div>
-            </AbsoluteFill>
-          );
-        })()}
-      </Sequence>
-
-      {/* ========================================================================= */}
-      {/* CENA 4: CHAMADA PARA AÇÃO (CTA) (Frames 336 a 450 / 11.25s a 15s)          */}
-      {/* ========================================================================= */}
-      <Sequence from={SCENE_FRAMES * 3} durationInFrames={SCENE_FRAMES}>
-        {(() => {
-          const sceneFrame = frame - SCENE_FRAMES * 3;
-          const ctaSpring = spring({
-            frame: sceneFrame,
-            fps,
-            config: { damping: 13, mass: 0.7, stiffness: 140 },
-          });
-
-          // Efeito de pulso de atenção no botão de ação
-          const pulse = 1 + Math.sin((sceneFrame / 6) * Math.PI) * 0.04;
-
-          // Efeito de brilho varrendo o botão
-          const sheenPosition = interpolate(sceneFrame, [0, 80], [-100, 200], {
-            extrapolateRight: "clamp",
-          });
-
-          return (
-            <AbsoluteFill
-              style={{
-                justifyContent: "center",
-                alignItems: "center",
-                padding: "0 36px",
-                zIndex: 30,
-              }}
-            >
               <div
                 style={{
                   textAlign: "center",
                   width: "100%",
-                  transform: `scale(${ctaSpring}) translateY(${(1 - ctaSpring) * 30}px)`,
+                  transform: `scale(${ctaSpring}) translateY(${(1 - ctaSpring) * 40}px)`,
                   opacity: ctaSpring,
                 }}
               >
-                {/* Título de Chamada para Ação */}
+                {/* Título de Fechamento */}
                 <KineticTypography
-                  text={cardAnalysis.ctaText || "GARANTA O SEU LOOK AGORA!"}
+                  text={cardAnalysis.ctaText || "GARANTA O SEU AGORA!"}
                   fontSize={52}
                   delayFrames={0}
                   accentColor={accentColor}
-                  highlightWords={["look", "garanta", "agora"]}
+                  highlightWords={["agora", "garanta", "peça", "aproveite"]}
                 />
 
-                {/* Subtexto */}
                 <p
                   style={{
                     color: "rgba(255, 255, 255, 0.85)",
                     fontSize: 24,
                     fontWeight: 600,
-                    marginTop: 16,
+                    marginTop: 18,
                     marginBottom: 36,
-                    textShadow: "0 4px 14px rgba(0,0,0,0.8)",
+                    lineHeight: 1.3,
                   }}
                 >
-                  {cardAnalysis.ctaSubtext || "Clique no botão abaixo ou envie uma mensagem"}
+                  {cardAnalysis.ctaSubtext || "Envie uma mensagem ou clique no link da bio"}
                 </p>
 
-                {/* Botão de Alta Conversão com Efeito de Brilho (Sheen) */}
+                {/* Botão de Ação com Efeito de Luz */}
                 <div
                   style={{
                     position: "relative",
                     display: "inline-block",
-                    transform: `scale(${pulse})`,
-                    cursor: "pointer",
+                    transform: `scale(${btnPulse})`,
                     overflow: "hidden",
                     borderRadius: 999,
-                    boxShadow: `0 12px 35px ${primaryColor}BB, 0 0 25px ${accentColor}66`,
+                    boxShadow: `0 14px 40px ${primaryColor}AA, 0 0 30px ${accentColor}66`,
                   }}
                 >
                   <div
@@ -513,49 +559,49 @@ export const AdVideoComposition: React.FC<AdVideoCompositionProps> = ({
                       color: "#FFFFFF",
                       fontSize: 30,
                       fontWeight: 900,
-                      padding: "20px 48px",
+                      padding: "22px 52px",
                       borderRadius: 999,
                       letterSpacing: "0.04em",
                       textTransform: "uppercase",
                       display: "flex",
                       alignItems: "center",
-                      gap: 14,
-                      border: "2px solid rgba(255,255,255,0.4)",
+                      gap: 16,
+                      border: "2px solid rgba(255,255,255,0.45)",
                     }}
                   >
                     <span>Fale Conosco</span>
-                    <span style={{ fontSize: 32 }}>👉</span>
+                    <span style={{ fontSize: 34 }}>👉</span>
                   </div>
 
-                  {/* Efeito de Luz Varrendo o Botão */}
+                  {/* Feixe de Luz (Sheen) */}
                   <div
                     style={{
                       position: "absolute",
                       top: 0,
-                      left: `${sheenPosition}%`,
-                      width: "40%",
+                      left: `${sheenX}%`,
+                      width: "45%",
                       height: "100%",
                       background:
-                        "linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)",
+                        "linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)",
                       transform: "skewX(-25deg)",
                       pointerEvents: "none",
                     }}
                   />
                 </div>
 
-                {/* Indicador de Deslizar / Toque com Animação de Salto */}
+                {/* Indicador de Ação no Rodapé */}
                 <div
                   style={{
-                    marginTop: 32,
+                    marginTop: 36,
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
                     gap: 8,
-                    color: "rgba(255,255,255,0.7)",
+                    color: "rgba(255, 255, 255, 0.7)",
                     fontSize: 18,
-                    fontWeight: 700,
+                    fontWeight: 800,
                     textTransform: "uppercase",
-                    letterSpacing: "0.08em",
+                    letterSpacing: "0.1em",
                   }}
                 >
                   <span>🔗 Link na Bio ou Direct</span>

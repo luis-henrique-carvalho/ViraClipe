@@ -34,80 +34,64 @@ export interface CompileVideoResult {
 }
 
 /**
- * Constrói o HTML dinâmico que será rasterizado pelo Chrome Headless Shell do Hypit
+ * Constrói o HTML de Motion Graphics criado 100% DO ZERO pelo Hypit.
+ * A imagem original NÃO É USADA como plano de fundo.
+ * O vídeo é desenhado do zero usando a identidade, cores, marca e roteiro extraídos pelo Gemini.
  */
 export function buildHypitHtmlTemplate(
-  imageDataUrl: string,
   cardAnalysis: CardAnalysisResult
 ): string {
-  const primaryColor = cardAnalysis.palette.primary || "#733544";
+  const primaryColor = cardAnalysis.palette.primary || "#FF5A1F";
   const accentColor = cardAnalysis.palette.secondary || "#C5A880";
-  const brandName = cardAnalysis.brandName || "Favorita Modas";
-  const hook = cardAnalysis.hook || "QUER SEUS LOOKS NOVOS AINDA ESTA SEMANA?";
-  const ctaText = cardAnalysis.ctaText || "GARANTA O SEU LOOK!";
+  const brandName = cardAnalysis.brandName || "Sua Marca";
+  const hook = cardAnalysis.hook || "SUA PROMOÇÃO PRONTA ANTES DE ABRIR A LOJA!";
+  const ctaText = cardAnalysis.ctaText || "GARANTA O SEU AGORA!";
   const ctaSubtext = cardAnalysis.ctaSubtext || "Chame no direct ou WhatsApp";
 
   const scene2 = cardAnalysis.scenes[1] || {
-    textOverlay: "PEÇAS SOB ENCOMENDA COM ENVIO RÁPIDO",
-    subtext: "Seus looks chegam na mesma semana do pedido",
+    textOverlay: "CARDÁPIO E OFERTAS DO DIA ATUALIZADOS",
+    subtext: "Receba pedidos direto no seu WhatsApp sem complicações",
     icon: "hanger",
     focusKeyword: "RÁPIDO",
-    focusArea: "product_detail",
   };
 
   const scene3 = cardAnalysis.scenes[2] || {
-    textOverlay: "PREÇO DE ATACADO EXCLUSIVO",
-    subtext: "Válido para pagamentos no Pix e dinheiro físico",
+    textOverlay: "PEÇA PELO WHATSAPP COM CONDIÇÕES ESPECIAIS",
+    subtext: "Atendimento direto e prático para o seu pedido",
     icon: "discount",
     focusKeyword: "ATACADO",
-    focusArea: "offer_badge",
   };
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Hypit Ad Frame</title>
+  <title>Hypit Clean Motion Graphics</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       width: 720px;
       height: 1280px;
       overflow: hidden;
-      background-color: #050505;
+      background-color: #0A0A0F;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #FFFFFF;
       position: relative;
       user-select: none;
     }
-    #camera-container {
+    /* Dynamic Brand Background Orbs (Zero static image) */
+    #motion-bg {
       position: absolute;
       inset: 0;
-      overflow: hidden;
-      background-color: #000;
-    }
-    #card-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: brightness(0.92) contrast(1.1);
-      transform-origin: center center;
-      will-change: transform;
+      background: radial-gradient(circle at 30% 25%, ${primaryColor}44 0%, transparent 60%),
+                  radial-gradient(circle at 75% 70%, ${accentColor}33 0%, transparent 65%),
+                  #0A0A10;
+      transition: background 0.1s ease;
     }
     #vignette {
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.65) 100%);
-    }
-    #top-gradient {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 28%;
-      background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
-    }
-    #bottom-gradient {
-      position: absolute;
-      bottom: 0; left: 0; width: 100%; height: 35%;
-      background: linear-gradient(0deg, rgba(0,0,0,0.92) 0%, transparent 100%);
+      background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.85) 100%);
     }
     #flash {
       position: absolute;
@@ -115,22 +99,22 @@ export function buildHypitHtmlTemplate(
       background: #FFFFFF;
       opacity: 0;
       pointer-events: none;
-      z-index: 50;
+      z-index: 60;
     }
     /* Stories Progress Bars */
     #progress-container {
       position: absolute;
-      top: 40px;
-      left: 5%;
-      width: 90%;
+      top: 42px;
+      left: 6%;
+      width: 88%;
       display: flex;
       gap: 6px;
-      z-index: 40;
+      z-index: 50;
     }
     .progress-bar {
       flex: 1;
       height: 4px;
-      background: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.25);
       border-radius: 999px;
       overflow: hidden;
     }
@@ -138,31 +122,31 @@ export function buildHypitHtmlTemplate(
       height: 100%;
       width: 0%;
       background: #FFFFFF;
-      box-shadow: 0 0 8px rgba(255,255,255,0.8);
+      box-shadow: 0 0 10px rgba(255,255,255,0.9);
       border-radius: 999px;
     }
     /* Brand Header */
     #brand-header {
       position: absolute;
-      top: 68px;
+      top: 72px;
       width: 100%;
       display: flex;
       justifyContent: center;
-      z-index: 40;
+      z-index: 45;
     }
     #brand-pill {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(10, 10, 10, 0.85);
-      border: 1.5px solid ${accentColor}99;
+      background: rgba(18, 18, 24, 0.88);
+      border: 1.5px solid ${primaryColor}88;
       padding: 8px 24px;
       border-radius: 999px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 15px ${accentColor}33;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.7), 0 0 20px ${primaryColor}33;
     }
     #brand-name {
       font-size: 19px;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: #FFFFFF;
@@ -188,7 +172,7 @@ export function buildHypitHtmlTemplate(
       z-index: 30;
       text-align: center;
     }
-    /* Kinetic Text */
+    /* Kinetic Words */
     .kinetic-word {
       display: inline-block;
       margin: 0 6px 8px 6px;
@@ -196,70 +180,70 @@ export function buildHypitHtmlTemplate(
       letter-spacing: -0.03em;
       text-transform: uppercase;
       text-shadow: 0 6px 20px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.8);
-      will-change: transform, opacity;
     }
     .highlight-word {
       color: ${accentColor};
       text-shadow: 0 0 25px ${accentColor}AA, 0 4px 18px rgba(0,0,0,0.9);
     }
-    /* Pill Tags */
     .impact-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: ${primaryColor};
+      background: linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%);
       color: #FFF;
-      padding: 8px 20px;
+      padding: 10px 24px;
       border-radius: 999px;
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 900;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      box-shadow: 0 6px 20px ${primaryColor}99;
-      border: 1px solid rgba(255,255,255,0.3);
-      margin-bottom: 24px;
+      box-shadow: 0 8px 25px ${primaryColor}88;
+      border: 1px solid rgba(255,255,255,0.4);
+      margin-bottom: 28px;
     }
-    /* Offer Ribbon */
+    .feature-card {
+      width: 100%;
+      background: rgba(20, 20, 28, 0.9);
+      border: 2px solid ${primaryColor}77;
+      border-radius: 32px;
+      padding: 40px 32px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 30px ${primaryColor}22;
+    }
     .offer-ribbon {
       background: ${accentColor};
-      color: #000;
+      color: #0A0A0F;
       font-weight: 900;
-      font-size: 18px;
+      font-size: 22px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      padding: 8px 22px;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px ${accentColor}88;
+      padding: 10px 28px;
+      border-radius: 16px;
+      box-shadow: 0 10px 35px ${accentColor}88;
       border: 2px solid #FFF;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
-    /* CTA Button */
     .cta-btn {
-      position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       background: linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%);
       color: #FFF;
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 900;
-      padding: 18px 44px;
+      padding: 20px 48px;
       border-radius: 999px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      box-shadow: 0 12px 35px ${primaryColor}BB, 0 0 25px ${accentColor}66;
-      border: 2px solid rgba(255,255,255,0.4);
-      margin-top: 24px;
+      box-shadow: 0 14px 40px ${primaryColor}AA, 0 0 30px ${accentColor}66;
+      border: 2px solid rgba(255,255,255,0.45);
+      margin-top: 26px;
     }
   </style>
 </head>
 <body>
-  <div id="camera-container">
-    <img id="card-image" src="${imageDataUrl}" alt="Card" />
-    <div id="vignette"></div>
-    <div id="top-gradient"></div>
-    <div id="bottom-gradient"></div>
-  </div>
+  <!-- Clean Animated Canvas (No user image background!) -->
+  <div id="motion-bg"></div>
+  <div id="vignette"></div>
   <div id="flash"></div>
 
   <!-- Story Progress Bars -->
@@ -273,7 +257,7 @@ export function buildHypitHtmlTemplate(
   <!-- Brand Header -->
   <div id="brand-header">
     <div id="brand-pill">
-      <span style="font-size:16px;">✨</span>
+      <span style="font-size:16px;">🚀</span>
       <span id="brand-name">${brandName}</span>
       <span id="brand-badge">Oficial</span>
     </div>
@@ -281,17 +265,18 @@ export function buildHypitHtmlTemplate(
 
   <!-- Scene 1: Hook -->
   <div class="scene" id="scene-0">
-    <div class="impact-pill" id="pill-0">🔥 AVISO IMPORTANTE</div>
-    <div id="hook-text" style="font-size: 46px; line-height: 1.15;">
+    <div class="impact-pill">⚡ AVISO IMPORTANTE</div>
+    <div style="font-size: 52px; line-height: 1.15;">
       ${hook
         .split(" ")
         .map(
           (w) =>
             `<span class="kinetic-word ${
-              w.toLowerCase().includes("look") ||
-              w.toLowerCase().includes("semana") ||
-              w.toLowerCase().includes("atacado") ||
-              w.toLowerCase().includes("preço")
+              w.toLowerCase().includes("pronta") ||
+              w.toLowerCase().includes("promoção") ||
+              w.toLowerCase().includes("loja") ||
+              w.toLowerCase().includes("abrir") ||
+              w.toLowerCase().includes("look")
                 ? "highlight-word"
                 : ""
             }">${w}</span>`
@@ -300,48 +285,50 @@ export function buildHypitHtmlTemplate(
     </div>
   </div>
 
-  <!-- Scene 2: Product Detail & Feature -->
-  <div class="scene" id="scene-1" style="justify-content: flex-end; padding-bottom: 120px;">
-    <div style="background: rgba(0,0,0,0.75); border: 1px solid ${accentColor}66; padding: 6px 16px; border-radius: 12px; color: ${accentColor}; font-weight:800; font-size: 15px; margin-bottom: 14px;">
-      📦 ENVIO ÁGIL & DIRETO
-    </div>
-    <div style="font-size: 40px; line-height: 1.18; margin-bottom: 16px;">
-      ${scene2.textOverlay}
-    </div>
-    <div style="background: rgba(15,15,15,0.85); border-left: 4px solid ${accentColor}; padding: 12px 18px; border-radius: 14px; font-size: 20px; color: #E0E0E0; font-weight: 600;">
-      ${scene2.subtext || ""}
+  <!-- Scene 2: Feature / Benefit Card -->
+  <div class="scene" id="scene-1">
+    <div class="feature-card">
+      <div style="display:inline-flex; align-items:center; justify-content:center; width:68px; height:68px; border-radius:20px; background:linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%); font-size:32px; margin-bottom:18px;">
+        ✨
+      </div>
+      <div style="font-size: 42px; line-height: 1.18; margin-bottom: 18px; font-weight:900;">
+        ${scene2.textOverlay}
+      </div>
+      <div style="color: #D0D0D8; font-size: 22px; font-weight: 600; line-height: 1.35;">
+        ${scene2.subtext || ""}
+      </div>
     </div>
   </div>
 
   <!-- Scene 3: The Offer -->
   <div class="scene" id="scene-2">
-    <div class="offer-ribbon">⚡ CONDIÇÃO ESPECIAL</div>
-    <div style="font-size: 48px; line-height: 1.15; margin-bottom: 24px;">
+    <div class="offer-ribbon">🔥 CONDIÇÃO EXCLUSIVA</div>
+    <div style="font-size: 48px; line-height: 1.15; margin-bottom: 26px; font-weight:900;">
       ${scene3.textOverlay}
     </div>
-    <div style="display: flex; gap: 12px; width: 100%;">
-      <div style="flex: 1; background: rgba(0,0,0,0.85); border: 1.5px solid ${accentColor}; padding: 12px; border-radius: 18px; font-size: 20px; font-weight: 800;">
-        💎 PIX
+    <div style="display: flex; gap: 14px; width: 100%;">
+      <div style="flex: 1; background: rgba(22,22,30,0.9); border: 1.5px solid ${accentColor}; padding: 16px; border-radius: 20px; font-size: 22px; font-weight: 800;">
+        📲 WHATSAPP
       </div>
-      <div style="flex: 1; background: rgba(0,0,0,0.85); border: 1.5px solid ${accentColor}; padding: 12px; border-radius: 18px; font-size: 20px; font-weight: 800;">
-        💵 DINHEIRO
+      <div style="flex: 1; background: rgba(22,22,30,0.9); border: 1.5px solid ${primaryColor}; padding: 16px; border-radius: 20px; font-size: 22px; font-weight: 800;">
+        ⚡ PEDIDO RÁPIDO
       </div>
     </div>
   </div>
 
   <!-- Scene 4: CTA -->
   <div class="scene" id="scene-3">
-    <div style="font-size: 46px; line-height: 1.15; margin-bottom: 14px;">
+    <div style="font-size: 48px; line-height: 1.15; margin-bottom: 16px; font-weight:900;">
       ${ctaText}
     </div>
-    <div style="color: rgba(255,255,255,0.85); font-size: 20px; font-weight: 600; margin-bottom: 24px;">
+    <div style="color: rgba(255,255,255,0.85); font-size: 22px; font-weight: 600; margin-bottom: 26px;">
       ${ctaSubtext}
     </div>
     <div class="cta-btn" id="cta-btn">
       <span>Fale Conosco</span>
       <span>👉</span>
     </div>
-    <div style="margin-top: 24px; color: rgba(255,255,255,0.7); font-size: 16px; font-weight: 700; text-transform: uppercase;">
+    <div style="margin-top: 30px; color: rgba(255,255,255,0.7); font-size: 18px; font-weight: 800; text-transform: uppercase;">
       🔗 Link na Bio ou Direct
     </div>
   </div>
@@ -349,7 +336,7 @@ export function buildHypitHtmlTemplate(
   <script>
     const SCENE_FRAMES = 112;
     const TOTAL_FRAMES = 450;
-    const cardImg = document.getElementById('card-image');
+    const bgEl = document.getElementById('motion-bg');
     const flashEl = document.getElementById('flash');
     const scenes = [
       document.getElementById('scene-0'),
@@ -365,7 +352,6 @@ export function buildHypitHtmlTemplate(
     ];
     const ctaBtn = document.getElementById('cta-btn');
 
-    // Função frame a frame chamada pelo Hypit Chrome Shell
     window.setFrame = function(frame) {
       const sceneIdx = Math.min(3, Math.floor(frame / SCENE_FRAMES));
       const sceneFrame = frame % SCENE_FRAMES;
@@ -386,40 +372,18 @@ export function buildHypitHtmlTemplate(
         }
       });
 
-      // 3. Câmera Dinâmica e Enquadramentos por Cena
-      let scale = 1.0;
-      let tx = 0;
-      let ty = 0;
+      // 3. Animação suave do fundo de orbs gerado do zero
+      const orbX = 25 + Math.sin(frame * 0.03) * 30;
+      const orbY = 30 + Math.cos(frame * 0.02) * 25;
+      bgEl.style.background = 'radial-gradient(circle at ' + orbX + '% ' + orbY + '%, ${primaryColor}44 0%, transparent 60%), radial-gradient(circle at ' + (100 - orbX) + '% ' + (100 - orbY) + '%, ${accentColor}33 0%, transparent 65%), #0A0A10';
 
-      if (sceneIdx === 0) {
-        // Cena 1: Push-in no topo/marca
-        const p = sceneFrame / SCENE_FRAMES;
-        scale = 1.05 + p * 0.22;
-        ty = -p * 25;
-      } else if (sceneIdx === 1) {
-        // Cena 2: Pan focado nos produtos / arara de roupas
-        const p = sceneFrame / SCENE_FRAMES;
-        scale = 1.35 + p * 0.15;
-        ty = -150 - p * 35;
-        tx = -10 + p * 20;
-      } else if (sceneIdx === 2) {
-        // Cena 3: Pull-back dinâmico para a oferta
-        const p = sceneFrame / SCENE_FRAMES;
-        scale = 1.45 - p * 0.22;
-        ty = -50 + p * 30;
-      } else {
-        // Cena 4: CTA estabilizado com respiração
-        const p = sceneFrame / SCENE_FRAMES;
-        scale = 1.15 - p * 0.05;
-        ty = -15 + p * 10;
-        // Pulso suave do botão de CTA
-        const pulse = 1 + Math.sin(sceneFrame * 0.4) * 0.035;
-        if (ctaBtn) ctaBtn.style.transform = 'scale(' + pulse + ')';
+      // 4. Pulso suave do botão na cena 4
+      if (sceneIdx === 3 && ctaBtn) {
+        const pulse = 1 + Math.sin(sceneFrame * 0.35) * 0.04;
+        ctaBtn.style.transform = 'scale(' + pulse + ')';
       }
 
-      cardImg.style.transform = 'scale(' + scale + ') translate(' + tx + 'px, ' + ty + 'px)';
-
-      // 4. Flash sutil de corte de cena (primeiros 3 frames de cada corte)
+      // 5. Flash sutil de corte de cena
       if (sceneFrame < 3 && frame > 3) {
         flashEl.style.opacity = (1 - sceneFrame / 3) * 0.45;
       } else {
@@ -443,10 +407,10 @@ export async function compileHypitVideo(
   const outputFileName = `${id}.mp4`;
   const outputPath = path.join(VIDEO_DIR, outputFileName);
 
-  log.info(`Iniciando compilação de vídeo MP4 via Hypit Engine para: [${input.cardAnalysis.brandName}]`);
+  log.info(`Iniciando compilação de vídeo MP4 via Hypit Engine (criado do zero) para: [${input.cardAnalysis.brandName}]`);
 
-  // 1. Gera o template HTML dinâmico guiado pelo Gemini
-  const htmlContent = buildHypitHtmlTemplate(input.imageDataUrl, input.cardAnalysis);
+  // 1. Gera o template HTML de Motion Graphics criado 100% do zero (sem usar a imagem como fundo)
+  const htmlContent = buildHypitHtmlTemplate(input.cardAnalysis);
 
   // 2. Carrega puppeteer-core do Hypit
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -518,13 +482,9 @@ export async function compileHypitVideo(
 
   const ffmpeg = spawn(FFMPEG_PATH, ffmpegArgs);
 
-  ffmpeg.stderr.on("data", (data) => {
-    // Debug output if needed
-  });
-
   // 5. Itera 450 frames (15 segundos a 30 FPS)
   const TOTAL_FRAMES = 450;
-  log.info(`Renderizando ${TOTAL_FRAMES} frames com o Chrome Headless Shell do Hypit...`);
+  log.info(`Renderizando ${TOTAL_FRAMES} frames de Motion Graphics limpo com o Chrome Headless Shell do Hypit...`);
 
   try {
     for (let f = 0; f < TOTAL_FRAMES; f++) {
