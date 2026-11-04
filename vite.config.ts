@@ -7,6 +7,9 @@ import { nitro } from "nitro/vite";
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
+  server: {
+    allowedHosts: true,
+  },
   plugins: [
     devtools(),
     tailwindcss(),
