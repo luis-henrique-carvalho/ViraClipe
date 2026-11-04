@@ -34,6 +34,7 @@ export interface AdVideoCompositionProps {
   cardAnalysis: CardAnalysisResult;
   backgroundImageUrl: string;
   audioUrl?: string;
+  videoUrl?: string;
   aspectRatio: VideoAspectRatio;
 }
 

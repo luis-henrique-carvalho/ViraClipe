@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { analyzeCardWithGemini } from "@/features/vision-engine/server/vision.service";
 import { synthesizeVoiceover } from "@/features/audio-engine/server/audio.service";
+import { compileHypitVideo } from "@/features/video-engine/server/hypit.service";
 import { fetchInstagramProfile } from "@/features/ingestion/server/instagram.service";
 import { createServerLogger } from "@/server/logger";
 
@@ -20,9 +21,9 @@ export const analyzeAndGenerateAdFn = createServerFn({ method: "POST" })
     })
   )
   .handler(async ({ data }) => {
-    log.info("Iniciando pipeline completo: Visão IA + Narração Neural");
+    log.info("Iniciando pipeline completo: Direção Criativa Gemini + Narração Neural + Hypit MP4");
 
-    // 1. Extração Multimodal com Gemini
+    // 1. Direção Criativa Multimodal com Gemini (Roteiro, Cenas, Enquadramentos e Paleta)
     const cardAnalysis = await analyzeCardWithGemini({
       imageDataUrl: data.imageDataUrl,
       caption: data.caption,
@@ -35,10 +36,25 @@ export const analyzeAndGenerateAdFn = createServerFn({ method: "POST" })
       rate: "+0%",
     });
 
+    // 3. Compilação do Vídeo Real em MP4 via Hypit Engine
+    let videoUrl: string | undefined;
+    try {
+      const hypitResult = await compileHypitVideo({
+        imageDataUrl: data.imageDataUrl,
+        audioUrl: audioResult.audioUrl,
+        cardAnalysis,
+      });
+      videoUrl = hypitResult.videoUrl;
+    } catch (err) {
+      log.error(`Erro ao compilar vídeo no Hypit: ${(err as Error).message}`);
+      // Fallback para player dinâmico caso falte algum binário em ambiente leve
+    }
+
     return {
       cardAnalysis,
       audioUrl: audioResult.audioUrl,
       backgroundImageUrl: data.imageDataUrl,
+      videoUrl,
       durationSec: 15,
     };
   });
