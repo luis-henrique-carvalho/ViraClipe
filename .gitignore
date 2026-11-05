@@ -44,6 +44,14 @@ Thumbs.db
 *.swp
 *.swo
 
-# Rendered temporary video chunks
+# Rendered temporary video chunks and generated media
 /tmp/
 public/rendered/
+public/generated-images/*
+!public/generated-images/.gitkeep
+public/video/*
+!public/video/.gitkeep
+public/audio/*
+!public/audio/ambient-beat.mp3
+!public/audio/.gitkeep
+public/vendor/
